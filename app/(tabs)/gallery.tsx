@@ -1,32 +1,37 @@
 import { useState } from 'react';
-import { Button, StyleSheet } from 'react-native';
+import { Button, ScrollView, StyleSheet } from 'react-native';
 import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
 
 import { ThemedView } from '@/components/ThemedView';
 
 export default function GalleryScreen() {
-  const [uri, setUri] = useState<string | null>(null);
+  const [uris, setUris] = useState<string[]>([]);
 
-  const pickImage = async () => {
+  const pickImages = async () => {
     const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!permission.granted) {
       return;
     }
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsMultipleSelection: true,
       quality: 1,
     });
 
     if (!result.canceled) {
-      setUri(result.assets[0].uri);
+      setUris(result.assets.map((asset) => asset.uri));
     }
   };
 
   return (
     <ThemedView style={styles.container}>
-      <Button title="Select Image" onPress={pickImage} />
-      {uri && <Image source={{ uri }} style={styles.image} />}
+      <Button title="Select Images" onPress={pickImages} />
+      <ScrollView contentContainerStyle={styles.scrollContent}>
+        {uris.map((uri) => (
+          <Image key={uri} source={{ uri }} style={styles.image} />
+        ))}
+      </ScrollView>
     </ThemedView>
   );
 }
@@ -38,9 +43,16 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 16,
   },
+  scrollContent: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'center',
+    gap: 16,
+    paddingVertical: 16,
+  },
   image: {
-    width: 300,
-    height: 300,
+    width: 100,
+    height: 100,
   },
 });
 
